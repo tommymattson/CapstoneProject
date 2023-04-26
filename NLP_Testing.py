@@ -1,3 +1,4 @@
+import nltk
 import gensim
 from gensim import corpora
 from nltk.tokenize import word_tokenize
@@ -9,6 +10,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import csv
+from nltk import pos_tag
+from nltk.corpus import wordnet
+nltk.download('averaged_perceptron_tagger')
 
 data = pd.read_csv('SeniorProject\Project\PromptsToAnalyze.csv')
 stemmer = PorterStemmer()
@@ -26,18 +30,24 @@ stop_words = set(stopwords.words('english') + list(string.punctuation) + toRemov
 #data['Processed_Text'] = data['Tokenized_Text'].apply(lambda x: [word.lower() for word in x if word.lower() not in stop_words])
 data['Stemmed_Text'] = data['Tokenized_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word in x if word.lower() not in stop_words])
 
+# Removing Adjectives
+data['POS_Tagged_Text'] = data['Stemmed_Text'].apply(pos_tag)
+data['Filtered_Text'] = data['POS_Tagged_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word, tag in x if tag not in ['JJ', 'JJR', 'JJS'] and word.lower() not in stop_words])
+
 
 
 # Create a dictionary from the processed text
 #dictionary = corpora.Dictionary(data['Processed_Text'])
-dictionary = corpora.Dictionary(data['Stemmed_Text'])
+#dictionary = corpora.Dictionary(data['Stemmed_Text'])
+dictionary = corpora.Dictionary(data['Filtered_Text'])
 
 # Create a document-term matrix
 #doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Processed_Text']]
-doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Stemmed_Text']]
+#doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Stemmed_Text']]
+doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Filtered_Text']]
 
 # Set the number of topics
-num_topics = 7
+num_topics = 5
 
 # Train the LDA model
 lda_model = gensim.models.LdaModel(doc_term_matrix, num_topics=num_topics, id2word=dictionary, passes=10)
@@ -65,7 +75,7 @@ with open('lda_results_5_topics.txt', 'w') as file:
         file.write("\n\n")
 '''
 # Define the output file path
-output_file = 'lda_results_7_topics_NLTK.csv'
+output_file = 'SeniorProject\Project\lda_results_5_topics_NLTK_POS_Tagging.csv'
 
 # Open the CSV file for writing
 with open(output_file, 'w', newline='') as file:
