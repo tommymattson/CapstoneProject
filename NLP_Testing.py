@@ -4,12 +4,14 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import string
 import pandas as pd
+from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import csv
 
 data = pd.read_csv('SeniorProject\Project\PromptsToAnalyze.csv')
+stemmer = PorterStemmer()
 
 # Tokenize the text
 data['Tokenized_Text'] = data['Prompt'].apply(word_tokenize)
@@ -21,15 +23,18 @@ toRemoveWords = ['red', 'orange', 'yellow', 'green',
 
 # Remove stopwords, punctuation, and color names
 stop_words = set(stopwords.words('english') + list(string.punctuation) + toRemoveWords)
-data['Processed_Text'] = data['Tokenized_Text'].apply(lambda x: [word.lower() for word in x if word.lower() not in stop_words])
+#data['Processed_Text'] = data['Tokenized_Text'].apply(lambda x: [word.lower() for word in x if word.lower() not in stop_words])
+data['Stemmed_Text'] = data['Tokenized_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word in x if word.lower() not in stop_words])
 
 
 
 # Create a dictionary from the processed text
-dictionary = corpora.Dictionary(data['Processed_Text'])
+#dictionary = corpora.Dictionary(data['Processed_Text'])
+dictionary = corpora.Dictionary(data['Stemmed_Text'])
 
 # Create a document-term matrix
-doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Processed_Text']]
+#doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Processed_Text']]
+doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Stemmed_Text']]
 
 # Set the number of topics
 num_topics = 7
@@ -60,7 +65,7 @@ with open('lda_results_5_topics.txt', 'w') as file:
         file.write("\n\n")
 '''
 # Define the output file path
-output_file = 'lda_results_7_topics.csv'
+output_file = 'lda_results_7_topics_NLTK.csv'
 
 # Open the CSV file for writing
 with open(output_file, 'w', newline='') as file:
