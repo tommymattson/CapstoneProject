@@ -32,7 +32,7 @@ def retrieve_messages(channelDictionary, headers):
     for key, value in channelDictionary.items():
         r = requests.get(f'https://discord.com/api/v9/channels/{value}/messages', headers=headers)
         jsonString = json.loads(r.text)
-        appendDataToCSV('Multichannel Extract5.csv', key, jsonString)
+        appendDataToCSV('SeniorProject\Project\Scraped Data\Multichannel Extract.csv', key, jsonString)
         time.sleep(1)
 
 def formatPrompt(unformattedPrompt):

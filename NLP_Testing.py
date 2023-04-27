@@ -12,10 +12,27 @@ import matplotlib.pyplot as plt
 import csv
 from nltk import pos_tag
 from nltk.corpus import wordnet
+import re
 nltk.download('averaged_perceptron_tagger')
 
+# Read in CSV
 data = pd.read_csv('SeniorProject\Project\PromptsToAnalyze.csv')
 stemmer = PorterStemmer()
+
+def replace_words(text, replacements):
+    pattern = re.compile(r'\b(?:%s)\b' % '|'.join(replacements), re.IGNORECASE)
+    return re.sub(pattern, lambda match: replacements[match.group(0).lower()], text)
+
+# Define the replacements
+replacements = {
+    'girl': 'woman',
+    'female': 'woman',
+    'boy': 'man',
+    'male': 'man'
+}
+
+# Apply the replacements and tokenize the modified text
+data['Prompt'] = data['Prompt'].apply(lambda x: replace_words(x, replacements))
 
 # Tokenize the text
 data['Tokenized_Text'] = data['Prompt'].apply(word_tokenize)
@@ -27,32 +44,24 @@ toRemoveWords = ['red', 'orange', 'yellow', 'green',
 
 # Remove stopwords, punctuation, and color names
 stop_words = set(stopwords.words('english') + list(string.punctuation) + toRemoveWords)
-#data['Processed_Text'] = data['Tokenized_Text'].apply(lambda x: [word.lower() for word in x if word.lower() not in stop_words])
-#data['Stemmed_Text'] = data['Tokenized_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word in x if word.lower() not in stop_words])
 
 # Removing Adjectives
-#data['POS_Tagged_Text'] = data['Stemmed_Text'].apply(pos_tag)
 data['POS_Tagged_Text'] = data['Tokenized_Text'].apply(pos_tag)
 data['Filtered_Text'] = data['POS_Tagged_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word, tag in x if tag not in ['JJ', 'JJR', 'JJS'] and word.lower() not in stop_words])
 
 
 
 # Create a dictionary from the processed text
-#dictionary = corpora.Dictionary(data['Processed_Text'])
-#dictionary = corpora.Dictionary(data['Stemmed_Text'])
 dictionary = corpora.Dictionary(data['Filtered_Text'])
 
 # Create a document-term matrix
-#doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Processed_Text']]
-#doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Stemmed_Text']]
 doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Filtered_Text']]
 
 # Set the number of topics
-num_topics = 5
+num_topics = 6
 
 # Train the LDA model
 lda_model = gensim.models.LdaModel(doc_term_matrix, num_topics=num_topics, id2word=dictionary, passes=10)
-
 
 # Get the topic distribution for each document
 topics = lda_model.get_document_topics(doc_term_matrix)
@@ -61,7 +70,7 @@ topics = lda_model.get_document_topics(doc_term_matrix)
 data['Dominant_Topic'] = [max(topics[i], key=lambda x: x[1])[0] for i in range(len(topics))]
 
 # Define the output file path
-output_file = 'SeniorProject\Project\lda_results_5_topics_NLTK_POS_Tagging2.csv'
+output_file = 'SeniorProject\Project\Output\lda_results_6_topics_NLTK_POS_Tagging2.csv'
 
 # Open the CSV file for writing
 with open(output_file, 'w', newline='') as file:
