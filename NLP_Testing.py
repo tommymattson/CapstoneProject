@@ -28,10 +28,11 @@ toRemoveWords = ['red', 'orange', 'yellow', 'green',
 # Remove stopwords, punctuation, and color names
 stop_words = set(stopwords.words('english') + list(string.punctuation) + toRemoveWords)
 #data['Processed_Text'] = data['Tokenized_Text'].apply(lambda x: [word.lower() for word in x if word.lower() not in stop_words])
-data['Stemmed_Text'] = data['Tokenized_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word in x if word.lower() not in stop_words])
+#data['Stemmed_Text'] = data['Tokenized_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word in x if word.lower() not in stop_words])
 
 # Removing Adjectives
-data['POS_Tagged_Text'] = data['Stemmed_Text'].apply(pos_tag)
+#data['POS_Tagged_Text'] = data['Stemmed_Text'].apply(pos_tag)
+data['POS_Tagged_Text'] = data['Tokenized_Text'].apply(pos_tag)
 data['Filtered_Text'] = data['POS_Tagged_Text'].apply(lambda x: [stemmer.stem(word.lower()) for word, tag in x if tag not in ['JJ', 'JJR', 'JJS'] and word.lower() not in stop_words])
 
 
@@ -59,23 +60,8 @@ topics = lda_model.get_document_topics(doc_term_matrix)
 # Extract the dominant topic for each document
 data['Dominant_Topic'] = [max(topics[i], key=lambda x: x[1])[0] for i in range(len(topics))]
 
-'''
-# Open the text file for writing
-with open('lda_results_5_topics.txt', 'w') as file:
-    # Iterate over each document
-    for index, row in data.iterrows():
-        file.write(f"Prompt: {row['Prompt']}\n")
-        file.write(f"Dominant Topic: {row['Dominant_Topic']}\n")
-        file.write("Keywords: ")
-        
-        # Get the top keywords for the dominant topic
-        keywords = lda_model.show_topic(row['Dominant_Topic'])
-        keywords_text = ", ".join([word[0] for word in keywords])
-        file.write(keywords_text)
-        file.write("\n\n")
-'''
 # Define the output file path
-output_file = 'SeniorProject\Project\lda_results_5_topics_NLTK_POS_Tagging.csv'
+output_file = 'SeniorProject\Project\lda_results_5_topics_NLTK_POS_Tagging2.csv'
 
 # Open the CSV file for writing
 with open(output_file, 'w', newline='') as file:
