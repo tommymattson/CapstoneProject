@@ -1,14 +1,31 @@
+'''
+Thomas Mattson
+Westmont College
+CS-195 Senior Seminar
+April 29, 2023
+'''
+
 import time
 import requests
 import json
-import csv
 import os
+import pandas as pd
+
 
 def appendDataToCSV(filename, channelName, jsonString):
-    # Create a dictionary to store the last prompt for each user
-    lastPrompts = {}
+    '''
+    Appends the last prompts for each user to a CSV file.
+
+    Args:
+        filename (str): The name of the CSV file.
+        channelName (str): The name of the channel.
+        jsonString (list): The JSON response containing the prompts.
+
+    '''
+    # Create a DataFrame to store the last prompt for each user
+    lastPrompts = []
     for value in jsonString:
-        if (value['author']['username'] == 'Midjourney Bot'):
+        if value['author']['username'] == 'Midjourney Bot':
             try:
                 user = value['mentions'][0]['id']
             except IndexError:
@@ -16,39 +33,61 @@ def appendDataToCSV(filename, channelName, jsonString):
             unformattedPrompt = value['content']
             userPrompt = formatPrompt(unformattedPrompt)
             timeStamp = value['timestamp']
-            # Update the dictionary with the current prompt for this user
-            lastPrompts[user] = [channelName, user, userPrompt, timeStamp]
+            # Append the current prompt to the DataFrame
+            lastPrompts.append([channelName, user, userPrompt, timeStamp])
 
-    # Append the last prompts to the CSV file
-    with open(filename, mode='a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        for row in lastPrompts.values():
-            try:
-                writer.writerow(row)
-            except UnicodeEncodeError:
-                continue
+    # Append the last prompts to the CSV file using pandas
+    df = pd.DataFrame(lastPrompts, columns=['Channel', 'User', 'Prompt', 'Timestamp'])
+    df.to_csv(filename, mode='a', index=False, header=not os.path.isfile(filename))
+
 
 def retrieve_messages(channelDictionary, headers):
+    '''
+    Retrieves messages from Discord channels and appends the prompts to a CSV file.
+
+    Args:
+        channelDictionary (dict): A dictionary mapping channel names to channel IDs.
+        headers (dict): The headers to include in the HTTP request.
+
+    '''
     for key, value in channelDictionary.items():
         r = requests.get(f'https://discord.com/api/v9/channels/{value}/messages', headers=headers)
         jsonString = json.loads(r.text)
-        appendDataToCSV('Multichannel Extract5.csv', key, jsonString)
+        appendDataToCSV('SeniorProject\Project\Scraped Data\Multichannel Extract.csv', key, jsonString)
         time.sleep(1)
 
+
 def formatPrompt(unformattedPrompt):
+    '''
+    Removes '**' at the beginning and end of prompt
+
+    Args:
+        unformattedPrompt (str): The unformatted prompt.
+
+    Returns:
+        str: The formatted prompt.
+
+    '''
     delimiter = "**"
     start_marker = unformattedPrompt.find(delimiter) + 2
     end_marker = unformattedPrompt.find(delimiter, start_marker)
     formattedPrompt = unformattedPrompt[start_marker:end_marker]
     return formattedPrompt
 
+
 def getMessages():
+    '''
+    Retrieves messages from multiple channels using different authorization tokens.
+
+    '''
+    # Retrieve authorization tokens from environment variables
     auth_TM1 = os.environ.get('midJourneyDiscordAPI_TM1')
     auth_TM2 = os.environ.get('midJourneyDiscordAPI_TM2')
     auth_TM3 = os.environ.get('midJourneyDiscordAPI_TM3')
     auth_LM  = os.environ.get('midJourneyDiscordAPI_LM')
     auth_EV  = os.environ.get('midJourneyDiscordAPI_EV')
 
+    # Define authorizations dictionary with channel IDs for each token
     authorizations = {
         auth_LM : {
             'newbies-113' : '1008571057562714113',
@@ -83,5 +122,6 @@ def getMessages():
         'authorization' : authorization_key
         }
         retrieve_messages(channelDictionary, headers)
+
 
 getMessages()
