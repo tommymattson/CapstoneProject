@@ -58,7 +58,7 @@ dictionary = corpora.Dictionary(data['Filtered_Text'])
 doc_term_matrix = [dictionary.doc2bow(doc) for doc in data['Filtered_Text']]
 
 # Set the number of topics
-num_topics = 6
+num_topics = 5
 
 # Train the LDA model
 lda_model = gensim.models.LdaModel(doc_term_matrix, num_topics=num_topics, id2word=dictionary, passes=10)
@@ -70,7 +70,7 @@ topics = lda_model.get_document_topics(doc_term_matrix)
 data['Dominant_Topic'] = [max(topics[i], key=lambda x: x[1])[0] for i in range(len(topics))]
 
 # Define the output file path
-output_file = 'SeniorProject\Project\Output\lda_results_6_topics_NLTK_POS_Tagging2.csv'
+output_file = 'SeniorProject\Project\Output\lda_results_5_topics_NLTK_POS_Tagging.csv'
 
 # Open the CSV file for writing
 with open(output_file, 'w', newline='') as file:
