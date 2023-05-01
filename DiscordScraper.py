@@ -4,7 +4,6 @@ Westmont College
 CS-195 Senior Seminar
 April 29, 2023
 '''
-
 import time
 import requests
 import json
@@ -13,15 +12,6 @@ import pandas as pd
 
 
 def appendDataToCSV(filename, channelName, jsonString):
-    '''
-    Appends the last prompts for each user to a CSV file.
-
-    Args:
-        filename (str): The name of the CSV file.
-        channelName (str): The name of the channel.
-        jsonString (list): The JSON response containing the prompts.
-
-    '''
     # Create a DataFrame to store the last prompt for each user
     lastPrompts = []
     for value in jsonString:
@@ -42,14 +32,6 @@ def appendDataToCSV(filename, channelName, jsonString):
 
 
 def retrieve_messages(channelDictionary, headers):
-    '''
-    Retrieves messages from Discord channels and appends the prompts to a CSV file.
-
-    Args:
-        channelDictionary (dict): A dictionary mapping channel names to channel IDs.
-        headers (dict): The headers to include in the HTTP request.
-
-    '''
     for key, value in channelDictionary.items():
         r = requests.get(f'https://discord.com/api/v9/channels/{value}/messages', headers=headers)
         jsonString = json.loads(r.text)
@@ -58,16 +40,6 @@ def retrieve_messages(channelDictionary, headers):
 
 
 def formatPrompt(unformattedPrompt):
-    '''
-    Removes '**' at the beginning and end of prompt
-
-    Args:
-        unformattedPrompt (str): The unformatted prompt.
-
-    Returns:
-        str: The formatted prompt.
-
-    '''
     delimiter = "**"
     start_marker = unformattedPrompt.find(delimiter) + 2
     end_marker = unformattedPrompt.find(delimiter, start_marker)
@@ -76,10 +48,6 @@ def formatPrompt(unformattedPrompt):
 
 
 def getMessages():
-    '''
-    Retrieves messages from multiple channels using different authorization tokens.
-
-    '''
     # Retrieve authorization tokens from environment variables
     auth_TM1 = os.environ.get('midJourneyDiscordAPI_TM1')
     auth_TM2 = os.environ.get('midJourneyDiscordAPI_TM2')
@@ -122,6 +90,5 @@ def getMessages():
         'authorization' : authorization_key
         }
         retrieve_messages(channelDictionary, headers)
-
 
 getMessages()
